@@ -1,0 +1,6 @@
+# ph-videos-deerflow Docker 部署配置
+# 使用 Docker 沙箱模式，适合云服务器部署
+# 用法: 复制为 config.yaml 或设置 DEER_FLOW_CONFIG_PATH=config.docker.yaml
+#
+# 与 config.example.yaml 的差异：sandbox 使用 AioSandboxProvider（Docker 容器）
+# 其他配置与 config.example.yaml 相同，请根据需要编辑 models、tools 等

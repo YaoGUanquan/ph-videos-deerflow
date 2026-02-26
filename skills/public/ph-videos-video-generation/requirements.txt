@@ -1,0 +1,8 @@
+# ph-videos-video-generation 依赖
+# 沙箱内需安装: pip install -r requirements.txt
+# 或设置 PH_VIDEOS_TEXT_PATH 指向 ph-videos-text 以复用其环境
+
+requests>=2.25.0
+volcengine-python-sdk[ark]>=1.0.0
+comfykit>=0.1.0
+imageio-ffmpeg>=0.5.0

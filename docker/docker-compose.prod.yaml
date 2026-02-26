@@ -1,0 +1,93 @@
+# ph-videos-deerflow 生产环境 Docker 部署
+# 用于云服务器部署
+#
+# 用法:
+#   docker compose -f docker/docker-compose.prod.yaml up -d
+# 访问: http://服务器IP:2026
+#
+# 前置: 运行 make config 生成 config.yaml，Docker 模式需将 sandbox 改为 AioSandboxProvider
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: ph-videos-deerflow-nginx
+    ports:
+      - "2026:2026"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - gateway
+      - langgraph
+    networks:
+      - ph-videos-deerflow
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../
+      dockerfile: frontend/Dockerfile
+    container_name: ph-videos-deerflow-frontend
+    command: sh -c "cd frontend && pnpm run build && pnpm run start"
+    expose:
+      - "3000"
+    volumes:
+      - ../logs:/app/logs
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ../frontend/.env
+    networks:
+      - ph-videos-deerflow
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile
+    container_name: ph-videos-deerflow-gateway
+    command: sh -c "cd backend && uv run uvicorn src.gateway.app:app --host 0.0.0.0 --port 8001"
+    volumes:
+      - ../backend/src:/app/backend/src
+      - ../backend/.env:/app/backend/.env
+      - ../config.yaml:/app/config.yaml
+      - ../skills:/app/skills
+      - ../logs:/app/logs
+      - ../backend/.deer-flow:/app/backend/.deer-flow
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ../.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ph-videos-deerflow
+    restart: unless-stopped
+
+  langgraph:
+    build:
+      context: ../
+      dockerfile: backend/Dockerfile
+    container_name: ph-videos-deerflow-langgraph
+    command: sh -c "cd backend && uv run langgraph dev --no-browser --allow-blocking --host 0.0.0.0 --port 2024"
+    volumes:
+      - ../backend/src:/app/backend/src
+      - ../backend/.env:/app/backend/.env
+      - ../config.yaml:/app/config.yaml
+      - ../skills:/app/skills
+      - ../logs:/app/logs
+      - ../backend/.deer-flow:/app/backend/.deer-flow
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ../.env
+    networks:
+      - ph-videos-deerflow
+    restart: unless-stopped
+
+networks:
+  ph-videos-deerflow:
+    driver: bridge
