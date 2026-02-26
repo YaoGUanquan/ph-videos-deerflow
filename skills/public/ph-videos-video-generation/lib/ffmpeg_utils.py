@@ -159,3 +159,106 @@ def is_ffmpeg_available() -> bool:
         return r.returncode == 0
     except Exception:
         return False
+
+
+def _video_has_audio(video_path: str) -> bool:
+    """检查视频是否包含音轨"""
+    import json
+    import subprocess
+
+    ffmpeg_path = get_ffmpeg_path()
+    if not ffmpeg_path:
+        return False
+    ffprobe_dir = os.path.dirname(ffmpeg_path)
+    ffprobe_name = "ffprobe.exe" if platform.system().lower() == "windows" else "ffprobe"
+    ffprobe = os.path.join(ffprobe_dir, ffprobe_name)
+    if not os.path.isfile(ffprobe):
+        ffprobe = shutil.which("ffprobe") or ffprobe
+    try:
+        r = subprocess.run(
+            [
+                ffprobe,
+                "-v", "quiet",
+                "-print_format", "json",
+                "-show_streams",
+                "-select_streams", "a",
+                video_path,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if r.returncode != 0:
+            return False
+        data = json.loads(r.stdout)
+        return bool(data.get("streams"))
+    except Exception:
+        return False
+
+
+def merge_video_with_bgm(
+    video_path: str,
+    bgm_path: str,
+    output_path: str,
+    bgm_volume: float = 0.3,
+) -> str:
+    """
+    将 BGM 混入视频。若视频有原音轨则混音，若无则添加 BGM 为 sole 音轨。
+
+    Args:
+        video_path: 视频文件路径
+        bgm_path: BGM 音频文件路径（mp3/wav 等）
+        output_path: 输出路径
+        bgm_volume: BGM 音量 0.0-1.0，默认 0.3
+
+    Returns:
+        输出文件路径
+    """
+    import subprocess
+
+    ffmpeg_path = get_ffmpeg_path()
+    if not ffmpeg_path:
+        raise RuntimeError("未找到 FFmpeg，无法混入 BGM")
+    env = get_ffmpeg_run_env() or {}
+    run_env = os.environ.copy()
+    run_env.update(env)
+
+    has_audio = _video_has_audio(video_path)
+    vol = max(0.0, min(1.0, bgm_volume))
+
+    if has_audio:
+        # 视频有音轨：amix 混音，BGM 使用 volume
+        filter_complex = (
+            f"[0:a]apad=whole_dur=0[va];[1:a]volume={vol}[bgm];"
+            "[va][bgm]amix=inputs=2:duration=first:dropout_transition=2[a]"
+        )
+        cmd = [
+            ffmpeg_path, "-y",
+            "-i", video_path,
+            "-i", bgm_path,
+            "-filter_complex", filter_complex,
+            "-map", "0:v",
+            "-map", "[a]",
+            "-c:v", "copy",
+            "-shortest",
+            output_path,
+        ]
+    else:
+        # 视频无音轨：添加 BGM 为 sole 音轨
+        filter_complex = (
+            f"[1:a]volume={vol},apad=whole_dur=0[bgm];"
+            "[0:v][bgm]concat=n=1:v=1:a=1[v][a]"
+        )
+        cmd = [
+            ffmpeg_path, "-y",
+            "-i", video_path,
+            "-i", bgm_path,
+            "-filter_complex", filter_complex,
+            "-map", "[v]",
+            "-map", "[a]",
+            "-shortest",
+            output_path,
+        ]
+
+    subprocess.run(cmd, check=True, capture_output=True, env=run_env, timeout=300)
+    return output_path

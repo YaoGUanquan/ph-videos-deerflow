@@ -1,88 +1,141 @@
 ---
 name: ph-videos-script-generation
-description: Use when user wants to generate or optimize video scripts for AI video generation (Seedance/通义万相/ComfyUI). Employs multi-draft generation (2 versions), 3 specialist scorers, and 1 round of refinement. Lightweight for quick execution.
+description: Use when user wants to generate or optimize video scripts for AI video generation (Seedance/Aliyun Wanxiang/ComfyUI). Employs multi-draft generation (2 versions), 3 specialist scorers, and 1 round of refinement. Proactively call web_search, image_search, deep-research, consulting-analysis, data-analysis, image-generation, video-generation, podcast-generation, github-deep-research, surprise-me, or skill-creator when needed for reference, assets, or inspiration.
 ---
 
-# ph-videos 视频脚本生成 Skill（精简版）
+# ph-videos Video Script Generation Skill (Lite)
 
-## 概述
+## Overview
 
-本 Skill 用于生成或优化 AI 视频分镜脚本，支持火山 Seedance、通义万相、ComfyUI 等平台。采用 **精简流程**：2 稿生成 + 3 个评分员 + 1 轮迭代，确保快速执行、避免卡顿。
+This skill generates or optimizes AI video storyboard scripts for Volcano Seedance, Aliyun Wanxiang, ComfyUI, and similar platforms. Uses a **lite workflow**: 2 drafts + 3 scorers + 1 iteration round for fast execution.
 
-## 核心流程
+**Important**: When executing this skill, **proactively call** DeerFlow tools and skills as needed for reference materials and better script quality.
 
-### 阶段 1：双稿生成（2 份）
+## DeerFlow Tools/Skills Integration (Proactive Calls)
 
-**必须启用 Sub-Agent 模式**，并行生成 **2 份**脚本初稿：
+Before Phase 0 or Phase 1, **decide** whether to call the following based on user needs; confirm with the user before executing:
 
-1. 使用 `task` 工具，同时启动 **2 个**子任务（`subagent_type: general-purpose`）
-2. 稿 1：使用 `video_generation` 风格（通用平衡）
-3. 稿 2：使用 `cinematic_shot` 风格（电影感增强）
-4. 每份脚本需符合目标平台（volcano/wanxiang/comfyui）的提示词公式
+| Capability | Type | When to Call | How |
+|------------|------|--------------|-----|
+| **web_search** | Tool | User mentions real events, movies, products, people, places—need search for reference details | Call `web_search` directly with search keywords |
+| **image_search** | Tool | User needs **image-to-video (i2v)** or wants **reference/style images** | Call `image_search` with image description keywords (e.g. "Japanese street photography 1990s", "cyberpunk city night") to get reference URLs for image-generation or ph-videos-video-generation |
+| **deep-research** | Skill | Complex topics needing multi-angle research (industry reports, competitor analysis, historical events) | `read_file` to load `deep-research` SKILL.md, follow its methodology with multi-round web_search + web_fetch |
+| **image-generation** | Skill | User needs **i2v** or wants reference images before writing script | `read_file` to load `image-generation` SKILL.md, generate reference images, save to `/mnt/user-data/outputs/` for ph-videos-video-generation |
+| **video-generation** | Skill | Optional: User wants single-segment preview (Gemini Veo) to validate | `read_file` to load `video-generation` SKILL.md (DeerFlow built-in Gemini video, different from ph-videos-video-generation) |
+| **ph-videos-music-script** | Skill | Phase 5 output when user needs BGM description | `read_file` to load `ph-videos-music-script` SKILL.md, generate music description from final script |
+| **ph-videos-music-generation** | Skill | User needs BGM audio (not just description) | `read_file` to load `ph-videos-music-generation` SKILL.md, call Suno/CosyVoice to generate audio for ph-videos-video-generation --bgm-file |
+| **consulting-analysis** | Skill | Industry/competitor/market/brand videos needing professional research | `read_file` to load `consulting-analysis` SKILL.md, produce analysis framework or report, then write script from it |
+| **data-analysis** | Skill | User uploads Excel/CSV for data-driven videos (sales trends, report interpretation) | `read_file` to load `data-analysis` SKILL.md, analyze data and extract visualization points, then write script |
+| **podcast-generation** | Skill | User needs voiceover/narration script or video with commentary | `read_file` to load `podcast-generation` SKILL.md for dialogue-style voiceover, complements ph-videos-music-script |
+| **github-deep-research** | Skill | Tech/open-source videos when user provides GitHub project URL | `read_file` to load `github-deep-research` SKILL.md, do repo research, then write tech intro script |
+| **surprise-me** | Skill | User says "give me inspiration", "random idea", "something creative" | `read_file` to load `surprise-me` SKILL.md for creative inspiration or unexpected combinations |
+| **skill-creator** | Skill | User wants to extend/customize video style or workflow | `read_file` to load `skill-creator` SKILL.md to guide creating custom video generation skill |
 
-**生成 Prompt 变体**（根据 video_provider 选择，见 `references/prompt_templates.md`）：
-- 火山/ComfyUI：主体+动作+镜头+风格；涉及人物时含「主角设定」「画面风格」
-- 通义万相：主体+场景+运动+美学控制+风格化
+**Calling principles**:
+- **Search when uncertain**: Use `web_search` for concrete movies, products, events before writing
+- **Research complex topics first**: Industry, competitor, tech videos—load `deep-research` or `consulting-analysis` first
+- **Analyze data first**: When user uploads Excel/CSV, load `data-analysis` before writing
+- **Research tech first**: When user provides GitHub URL, load `github-deep-research` for repo research
+- **i2v needs first frame**: For image-to-video, use `image_search` for reference or call `image-generation` for first frame
+- **Need inspiration**: When user says "random", "inspiration", "creative", load `surprise-me`
 
-### 阶段 2：3 个评分员评分
+## Core Workflow
 
-对**每份脚本**，调用 **3 个**核心评分子任务（精简版仅保留最关键的 3 个维度）：
+### Phase 0: Gather User Requirements (Video Style & Aspect Ratio)
 
-| 评分员 | 维度 | 满分 | 评分重点 |
-|--------|------|------|----------|
-| ph-videos-scorer-cinematography | 镜头语言 | 15 | 景别、运镜是否清晰合理 |
-| ph-videos-scorer-description | 描述质量 | 15 | 是否具体可视觉化、无空洞 |
-| ph-videos-scorer-feasibility | 可执行性 | 15 | 是否适合当前视频模型、用户意图匹配、风格氛围 |
+Before generating, **ask or confirm** (use defaults if user does not provide):
 
-**总分 45 分**（精简版）。**达标线**：36 分（80%）。
+| Parameter | Description | Default |
+|-----------|--------------|---------|
+| **video_style** | 2D / 3D / 2D animation / photorealistic 3D / cartoon | 2D |
+| **aspect_ratio** | 16:9 landscape / 9:16 portrait | 16:9 |
+| **video_provider** | volcano / wanxiang / comfyui | Per user or config |
 
-**操作**：对每份脚本，spawn 3 个 `task` 子任务，使用上述 3 个 Sub-Agent。**建议串行调用**，避免并发过高导致卡顿。
+These parameters affect script style and are passed to ph-videos-video-generation.
 
-### 阶段 3：汇总与选优
+### Phase 1: Dual Draft Generation (2 drafts)
 
-1. 汇总每份脚本的 3 个维度得分，计算总分（满分 45）
-2. **达标线**：36 分（80%）
-3. **优先选择**：若存在达标的脚本，直接选用**最高分**的那份
-4. **否则**：选用当前最高分，进入阶段 4
+**Must use Sub-Agent mode** to generate **2** script drafts in parallel:
 
-### 阶段 4：迭代优化（仅 1 轮）
+1. Use `task` tool to spawn **2** subtasks (`subagent_type: general-purpose`)
+2. Draft 1: `video_generation` style (balanced)
+3. Draft 2: `cinematic_shot` style (cinematic)
+4. Each draft must follow target platform (volcano/wanxiang/comfyui) prompt formulas
 
-若最高分未达标（< 36 分）：
+**Prompt variants** (see `references/prompt_templates.md` by video_provider):
+- Volcano/ComfyUI: subject + action + shot + style; include "protagonist setting" and "visual style" when involving characters
+- Aliyun Wanxiang: subject + scene + motion + aesthetic control + stylization
 
-1. 收集 3 个评分员的**修改建议**，合并为一份综合反馈
-2. 根据反馈对脚本进行优化（spawn 1 个子任务执行优化）
-3. 对优化后的脚本重新执行阶段 2（3 个评分员评分）
-4. **仅执行 1 轮**，不再重复迭代
+### Phase 2: Scorer Evaluation
 
-### 阶段 5：输出
+**Lite mode** (3 scorers, total 45, pass line 36):
 
-- 输出最终脚本（达标则优先使用达标稿，否则使用最高分稿）
-- 可选输出音乐脚本（BGM 描述）
-- 输出评分摘要（各维度得分、是否达标）
+| Scorer | Dimension | Max | Focus |
+|--------|-----------|-----|-------|
+| ph-videos-scorer-cinematography | Cinematography | 15 | Shot types, camera movements |
+| ph-videos-scorer-description | Description Quality | 15 | Visualizability, concreteness |
+| ph-videos-scorer-feasibility | Feasibility | 15 | Model compatibility |
 
-## 超时与降级
+**Full 7-dim mode** (7 scorers, total 90, pass line 72):
 
-- 若某子任务超时（如 120 秒），**跳过该子任务**，继续后续流程
-- 若某评分员返回解析失败，**该维度计 0 分**，不计入总分
-- 若 2 稿均生成失败，**直接使用主 Agent 生成 1 稿**作为备选
+| Scorer | Dimension | Max | Focus |
+|--------|-----------|-----|-------|
+| ph-videos-scorer-cinematography | Cinematography | 15 | Shot types, camera movements |
+| ph-videos-scorer-description | Description Quality | 15 | Visualizability, concreteness |
+| ph-videos-scorer-coherence | Coherence | 15 | Scene transitions, narrative logic |
+| ph-videos-scorer-character | Character Consistency | 10 | Character appearance/style unity |
+| ph-videos-scorer-feasibility | Feasibility | 15 | Seedance/Wanxiang/ComfyUI compatibility |
+| ph-videos-scorer-user-intent | User Intent Match | 10 | Alignment with user theme/style/mood |
+| ph-videos-scorer-style-atmosphere | Style & Atmosphere | 10 | Visual style, lighting, mood consistency |
 
-## 关键词与触发
+**Action**: For each script, spawn the corresponding number of `task` subtasks with the above `subagent_type`. **Prefer serial calls** to avoid overload.
 
-- 视频脚本、分镜、脚本优化、视频文案
-- 火山、豆包、Seedance、通义万相、ComfyUI
-- 文生视频、图生视频、小说转视频
+### Phase 3: Aggregate & Select
 
-## 输出规范
+1. Sum scores per dimension for each script (lite max 45, full max 90)
+2. **Pass line**: Lite 36, Full 72 (both 80%)
+3. **Prefer**: If any script passes, use the highest-scoring one
+4. **Else**: Use current highest, proceed to Phase 4
 
-1. 每段为一句完整、可视觉化的描述，30-80 字
-2. 涉及人物时，开头含「主角设定：XXX」「画面风格：XXX」
-3. 每段之间换行分隔，以句号结尾
-4. 直接可用于 Seedance/通义万相/ComfyUI API
+### Phase 4: Iteration (1 round only)
 
-## 参考：精简版使用 3 个评分员
+If highest score does not pass (lite < 36, full < 72):
 
-- `ph-videos-scorer-cinematography`：镜头语言
-- `ph-videos-scorer-description`：描述质量
-- `ph-videos-scorer-feasibility`：可执行性
+1. Collect **suggestions** from scorers, merge into feedback
+2. Optimize script based on feedback (spawn 1 subtask)
+3. Re-run Phase 2 with same number of scorers
+4. **Only 1 round**, no further iteration
 
-（完整版 5 个评分员：coherence、character 可在后续扩展时启用）
+### Phase 5: Output
+
+- Output final script (prefer passing draft, else highest-scoring)
+- **Optional**: If user needs BGM, load `ph-videos-music-script` to generate music description
+- Output score summary (per-dimension scores, pass/fail)
+- **Handoff**: Tell user to call `ph-videos-video-generation` to turn script into video
+
+## Timeout & Fallback
+
+- If a subtask times out (e.g. 120s), **skip** it and continue
+- If a scorer returns parse failure, **that dimension scores 0**, excluded from total
+- If both drafts fail, **use main Agent to generate 1 draft** as fallback
+
+## Keywords & Triggers
+
+- Video script, storyboard, script optimization, video copy
+- Volcano, Doubao, Seedance, Aliyun Wanxiang, ComfyUI
+- Text-to-video, image-to-video, novel-to-video
+
+## Output Specification
+
+1. Each segment: one complete, visualizable sentence, 30–80 chars
+2. When involving characters: start with "Protagonist: XXX", "Visual style: XXX"
+3. Segments separated by newlines, end with period
+4. Directly usable by Seedance/Wanxiang/ComfyUI API
+
+## Scorers & Modes
+
+**Lite** (3): cinematography, description, feasibility
+
+**Full 7-dim** (7): cinematography, description, coherence, character, feasibility, user-intent, style-atmosphere
+
+Choose lite or full based on user needs. Full mode suits higher quality requirements.

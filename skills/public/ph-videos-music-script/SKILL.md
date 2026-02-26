@@ -3,25 +3,65 @@ name: ph-videos-music-script
 description: Generate BGM/music script from video script and video config. For CosyVoice/Suno or user-uploaded BGM. Use after ph-videos-script-generation produces final script.
 ---
 
-# ph-videos 音乐脚本生成 Skill
+# ph-videos Music Script Skill
 
-## 概述
+## Overview
 
-根据视频分镜脚本和视频生成配置（时长、分段、特效、情景等），综合生成适合 AI 音乐生成的 BGM 描述。可选结合用户音乐关键词。
+Generates BGM descriptions suitable for AI music generation (CosyVoice, Suno, etc.) or user upload from video storyboard scripts and config. **Call after ph-videos-script-generation** produces final script, before or after ph-videos-video-generation.
 
-## 输入
+## Core Capabilities
 
-- 视频分镜脚本（来自 ph-videos-script-generation）
-- 视频配置：总时长、分段数、分辨率、特效模板等
-- 用户音乐关键词（可选）：风格、乐器、情绪等
+- Synthesize video content, duration, segments, and mood into BGM description
+- Incorporate user music keywords (style, instruments, mood)
+- Output under 50 chars, usable by AI music API or manual selection
 
-## 输出规范
+## Workflow
 
-1. 50 字以内，直接描述音乐风格
-2. 必须包含：风格（轻柔/激昂/治愈/史诗）、情绪、节奏、乐器（钢琴/弦乐/电子）
-3. 与视频内容、时长节奏、情景氛围匹配
-4. 若有用户关键词，需自然融入，不得直接照抄
+### Step 1: Prerequisites
 
-## 关键词
+- Have **ph-videos-script-generation** final video storyboard script
+- Optional: video config (total duration, segment count, resolution, effects)
+- Optional: user music keywords (style, instruments, mood)
 
-- BGM、背景音乐、配乐、音乐脚本
+### Step 2: Analyze Script & Config
+
+- Extract video theme, emotional arc, rhythm changes
+- Infer BGM rhythm and structure from segment count and duration
+- Naturally incorporate user keywords if provided
+
+### Step 3: Generate BGM Description
+
+Output a music script under 50 chars including:
+
+- **Style**: gentle / uplifting / healing / epic / electronic / classical, etc.
+- **Mood**: Matches video scenario
+- **Rhythm**: fast / medium / slow, aligned with segment rhythm
+- **Instruments**: piano / strings / electronic / guitar, etc.
+
+### Step 4: Output
+
+- Output BGM description to user
+- User can use CosyVoice/Suno to generate audio or select music manually
+
+## ph-videos Flow Integration
+
+```
+ph-videos-script-generation (script)
+        ↓
+ph-videos-music-script (this skill, BGM description)  ← optional
+        ↓
+ph-videos-music-generation (BGM audio)  ← optional, needs SUNO_API_KEY etc.
+        ↓
+ph-videos-video-generation (video, --bgm-file mix)
+```
+
+## Output Specification
+
+1. Under 50 chars, direct music style description
+2. Must include: style, mood, rhythm, instruments
+3. Match video content, duration rhythm, scenario mood
+4. If user keywords provided, incorporate naturally, do not copy verbatim
+
+## Keywords
+
+- BGM, background music, score, music script, CosyVoice, Suno

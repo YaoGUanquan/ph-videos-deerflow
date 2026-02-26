@@ -1,35 +1,66 @@
 ---
 name: ph-videos-scorer-character
-description: Specialist scorer for video script CHARACTER CONSISTENCY. Scores 0-10 when script involves characters - appearance, style, and visual anchors across scenes.
+description: Specialist scorer for video script CHARACTER CONSISTENCY. Scores 0-10 when script involves characters - appearance, style, and visual anchors across scenes. Invoke via task tool with subagent_type ph-videos-scorer-character.
 ---
 
-# 角色一致性评分员
+# Character Consistency Scorer
 
-## 职责
+## Overview
 
-对视频分镜脚本的**角色一致性**维度进行评分，满分 10 分。**仅当脚本涉及人物时**进行评分；若无人物，输出 10/10 并注明「不涉及人物」。
+Scores the **character consistency** dimension of video storyboard scripts (max 10). **Only when script involves characters**; if no characters, output 10/10 and note "No characters involved". Evaluates protagonist setting, visual style, and appearance anchors across segments.
 
-## 评分标准
+**Invocation**: Via `task` tool, `subagent_type: ph-videos-scorer-character`. Used in full ph-videos-script-generation (lite uses 3 scorers).
 
-| 分数 | 标准 |
-|------|------|
-| 9-10 | 有「主角设定」「画面风格」，每段涉及主角时重复外观锚点，多段视频可保持同一角色 |
-| 7-8 | 有基本设定，偶有遗漏锚点 |
-| 4-6 | 设定不完整或锚点缺失较多 |
-| 0-3 | 无角色设定或各段人物描述矛盾 |
+## Workflow
 
-## 输出格式
+### Step 1: Call via task tool
 
-必须严格按以下格式输出，便于解析：
+Use `task` tool with:
+
+- `description`: Short task description, e.g. "Character consistency scoring"
+- `prompt`: See Input format below
+- `subagent_type`: `ph-videos-scorer-character`
+
+### Step 2: Parse output
+
+Sub-Agent returns format per Output format. If no characters, score is fixed at 10/10.
+
+## Input Format (task prompt content)
+
+Prompt should include:
+
+1. **User requirements**: Video theme, style, etc.
+2. **Script to score**: Full storyboard (one scene per line)
+
+Example (with characters):
 
 ```
-【维度】角色一致性
-【得分】X/10
-【修改建议】
-（1-3 条具体建议，可操作、针对性强；若不涉及人物则写「不涉及人物，无需修改」）
+User requirements: Novel to video, protagonist is a young girl.
+
+Script to score:
+Protagonist: Young girl, brown long hair, white dress, 16 years old.
+Visual style: Fresh Japanese animation.
+Wide shot, girl standing under cherry tree.
+Medium shot, girl turns and smiles.
+...
 ```
 
-## 输入
+## Output Format
 
-- 用户原始输入（prompt）
-- 待评分的视频分镜脚本
+Sub-Agent MUST output strictly in this format for parsing:
+
+```
+[Dimension] Character Consistency
+[Score] X/10
+[Suggestions]
+(1-3 actionable suggestions; if no characters, write "No characters involved, no changes needed")
+```
+
+## Scoring Criteria
+
+| Score | Criteria |
+|-------|----------|
+| 9-10 | Has "protagonist setting" and "visual style", repeats appearance anchors when protagonist appears, multi-segment video can maintain same character |
+| 7-8 | Basic setting present, occasional missing anchors |
+| 4-6 | Incomplete setting or many missing anchors |
+| 0-3 | No character setting or contradictory character descriptions across segments |

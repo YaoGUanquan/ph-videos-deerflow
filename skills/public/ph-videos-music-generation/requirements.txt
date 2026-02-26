@@ -1,0 +1,4 @@
+# ph-videos-music-generation 依赖
+# 沙箱内需安装: pip install -r requirements.txt
+
+requests>=2.25.0

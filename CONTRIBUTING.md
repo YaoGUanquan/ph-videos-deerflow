@@ -88,7 +88,6 @@ cd frontend && pnpm test
 
 - [配置指南](backend/docs/CONFIGURATION.md)
 - [架构概览](backend/CLAUDE.md)
-- [GitHub 部署](docs/GITHUB_DEPLOY.md)
 
 ## 需要帮助？
 

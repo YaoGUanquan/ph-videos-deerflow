@@ -64,7 +64,8 @@ ph-videos-deerflow/
 │   ├── ph-videos-scorer-character      # 角色一致性评分员
 │   ├── ph-videos-scorer-feasibility     # 可执行性评分员
 │   ├── ph-videos-video-generation/     # 视频生成（火山/通义/ComfyUI）
-│   └── ph-videos-music-script/         # 音乐脚本生成
+│   ├── ph-videos-music-script/         # 音乐脚本生成
+│   └── ph-videos-music-generation/     # BGM 音频生成（Suno/CosyVoice）
 ├── docker/            # Docker 部署
 ├── electron/          # Electron exe 打包
 ├── scripts/           # 构建脚本

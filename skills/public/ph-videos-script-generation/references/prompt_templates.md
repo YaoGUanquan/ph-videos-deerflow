@@ -1,96 +1,110 @@
-# 脚本生成 Prompt 模板
+# Script Generation Prompt Templates
 
-根据 video_provider 选择对应公式，根据 script_style 选择风格变体。
-
----
-
-## 一、平台公式（video_provider）
-
-### 火山/豆包 Seedance / ComfyUI
-
-**公式**：主体描述 + 动作/运动 + 镜头/视角 + 风格/氛围
-
-- 主体：视频主要表现对象，含外观特征
-- 动作：奔跑、转身、穿越、流动；强调幅度与节奏
-- 镜头：景别（全景/中景/近景/特写）+ 运镜（推进、拉远、跟随、环绕）
-- 风格：光线（自然光、电影级、金色黄昏）、画质（4K、真实）、风格（电影感、赛博朋克）
-
-**涉及人物时**：开头写「主角设定：XXX」「画面风格：XXX」，每段涉及主角时重复外观锚点。
-
-### 通义万相 文生视频 (t2v)
-
-**公式**：主体 + 场景 + 运动 + 美学控制 + 风格化
-
-- 主体描述：外观特征细节
-- 场景描述：环境特征
-- 运动描述：幅度、速率、效果
-- 美学控制：光源、光线、景别、运镜
-- 风格化：赛博朋克、勾线插画等
-
-**涉及人物时**：同上，主角设定 + 画面风格 + 外观锚点。
-
-### 通义万相 图生视频 (i2v)
-
-**公式**：运动 + 运镜（首帧图已确定主体和场景）
-
-- 运动：结合图像元素描述动态过程
-- 运镜：镜头推进、左移、固定镜头等
-
-### 通义万相 参考生视频 (r2v)
-
-**公式**：主角 + 动作 + 台词 + 场景
-
-- 使用 character1、character2 引用参考视频中的主角
-- 动作、台词、场景自然衔接
+Select formulas by video_provider, style variants by script_style, and adjust visual descriptions by video_style.
 
 ---
 
-## 二、脚本风格变体（script_style）
+## 0. Video Style (video_style)
 
-多稿生成时可让不同子任务使用不同风格，增加多样性。
+When generating scripts, specify video style to guide visual description and cinematography:
 
-### video_generation - 视频脚本优化
-
-通用风格，提升场景描述的精确性和视觉指导性。结构：场景+镜头+主体动作+光线氛围。
-
-### cinematic_shot - 电影感分镜
-
-电影级镜头语言，强调光影、运镜、氛围。每段明确景别与运镜，光线与情绪匹配。
-
-### product_intro - 产品介绍风格
-
-适合产品展示、营销文案。每段含：场景（使用环境）+ 镜头（中景/特写）+ 产品动作 + 光线（明亮、专业布光）。突出卖点。
-
-### knowledge_popular - 知识科普风格
-
-适合知识讲解、科普内容。用具体画面表达抽象概念（如用水流比喻电流）。镜头建议：全景建立场景、中景展示主体、特写强调细节。
-
-### narrative - 叙事解说风格
-
-适合故事叙述、纪录片解说。每段：场景+镜头+人物/主体动作+情感氛围。富有感染力。
-
-### novel_story - 小说转视频
-
-适合小说、故事文本的视频化。**角色一致性最重要**：开头必须写「主角设定：XXX」（详细服装颜色、发型、年龄感），再写「画面风格：XXX」。每段涉及主角时重复外观锚点。
-
-### short_form_video - 短视频脚本
-
-抖音/TikTok/YouTube Shorts 专用。前 3 秒强钩子（特写、意外动作），节奏明快，每段 30-60 字，多快切镜头感。
-
-### character_consistent - 角色一致脚本
-
-多人物视频，为每个角色写详细服装规格（主色调、上衣、下装、配饰、发型），使用具体颜色如「深蓝色」「酒红色」。每段开头重复角色定义。
+| video_style | Description | Key Points |
+|-------------|-------------|------------|
+| 2D | Flat illustration/comic style | Lines, color blocks, flat composition |
+| 3D | 3D realistic | Depth, lighting, depth of field |
+| 2D animation | Animation style | Cartoon, exaggerated motion, smooth transitions |
+| photorealistic 3D | Film-grade realistic | Realistic lighting, physical texture |
+| cartoon | Simplified cartoon | Simple shapes, high contrast colors |
 
 ---
 
-## 三、多稿生成时的风格分配建议
+## 1. Platform Formulas (video_provider)
 
-生成 3-5 稿时，可让各子任务侧重不同风格：
+### Volcano/Doubao Seedance / ComfyUI
 
-| 稿序号 | 建议风格 | 说明 |
-|--------|----------|------|
-| 1 | video_generation | 通用平衡 |
-| 2 | cinematic_shot | 电影感增强 |
-| 3 | narrative / novel_story | 叙事/故事感（若内容适合） |
-| 4 | short_form_video | 快节奏（若目标为短视频） |
-| 5 | product_intro / knowledge_popular | 按内容类型选择 |
+**Formula**: Subject + Action/Motion + Shot/View + Style/Atmosphere
+
+- Subject: Main visual object, including appearance
+- Action: Run, turn, traverse, flow; emphasize amplitude and rhythm
+- Shot: Shot type (wide/medium/close-up) + Camera movement (push, pull, follow, orbit)
+- Style: Lighting (natural, cinematic, golden hour), quality (4K, realistic), style (cinematic, cyberpunk)
+
+**When involving characters**: Start with "Protagonist: XXX", "Visual style: XXX"; repeat appearance anchors when protagonist appears.
+
+### Aliyun Wanxiang Text-to-Video (t2v)
+
+**Formula**: Subject + Scene + Motion + Aesthetic Control + Stylization
+
+- Subject: Appearance details
+- Scene: Environment features
+- Motion: Amplitude, speed, effect
+- Aesthetic control: Light source, lighting, shot type, camera movement
+- Stylization: Cyberpunk, line illustration, etc.
+
+**When involving characters**: Same as above, protagonist setting + visual style + appearance anchors.
+
+### Aliyun Wanxiang Image-to-Video (i2v)
+
+**Formula**: Motion + Camera (first frame already defines subject and scene)
+
+- Motion: Describe dynamic process based on image elements
+- Camera: Push in, pan left, static shot, etc.
+
+### Aliyun Wanxiang Reference-to-Video (r2v)
+
+**Formula**: Protagonist + Action + Dialogue + Scene
+
+- Use character1, character2 to reference protagonists from reference video
+- Action, dialogue, scene flow naturally
+
+---
+
+## 2. Script Style Variants (script_style)
+
+For multi-draft generation, assign different styles to subtasks for diversity.
+
+### video_generation - Video Script Optimization
+
+General style, improves scene description precision and visual guidance. Structure: scene + shot + subject action + lighting atmosphere.
+
+### cinematic_shot - Cinematic Storyboard
+
+Film-grade cinematography, emphasizes lighting, camera movement, atmosphere. Each segment specifies shot type and movement, lighting matches mood.
+
+### product_intro - Product Introduction
+
+For product showcase, marketing copy. Each segment: scene (usage context) + shot (medium/close-up) + product action + lighting (bright, professional). Highlight selling points.
+
+### knowledge_popular - Knowledge Popularization
+
+For educational, science content. Express abstract concepts with concrete visuals (e.g. water flow for electric current). Shots: wide for scene, medium for subject, close-up for detail.
+
+### narrative - Narrative Commentary
+
+For storytelling, documentary. Each segment: scene + shot + character/subject action + emotional atmosphere. Engaging.
+
+### novel_story - Novel to Video
+
+For novel, story adaptation. **Character consistency is critical**: Start with "Protagonist: XXX" (detailed clothing color, hair, age), then "Visual style: XXX". Repeat appearance anchors when protagonist appears.
+
+### short_form_video - Short-Form Script
+
+For TikTok/YouTube Shorts. Strong hook in first 3 seconds (close-up, surprising action), fast pace, 30–60 chars per segment, quick cuts.
+
+### character_consistent - Character-Consistent Script
+
+Multi-character video. Write detailed costume specs per character (main color, top, bottom, accessories, hair), use specific colors like "navy blue", "burgundy". Repeat character definition at segment start.
+
+---
+
+## 3. Style Assignment for Multi-Draft Generation
+
+When generating 3–5 drafts, assign styles per subtask:
+
+| Draft | Suggested Style | Notes |
+|-------|-----------------|-------|
+| 1 | video_generation | General balance |
+| 2 | cinematic_shot | Cinematic enhancement |
+| 3 | narrative / novel_story | Narrative/story feel (if content fits) |
+| 4 | short_form_video | Fast pace (if targeting short-form) |
+| 5 | product_intro / knowledge_popular | By content type |
