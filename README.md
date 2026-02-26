@@ -80,9 +80,6 @@ ph-videos-deerflow/
 ## 文档
 
 - [项目说明](PROJECT_README.md) - 详细特性与部署说明
-- [GitHub 部署指南](docs/GITHUB_DEPLOY.md) - 文件说明与推送检查
-- [Skills 说明](docs/PH_VIDEOS_SKILLS.md) - ph-videos 相关 Skills
-- [迁移对照](docs/PH_VIDEOS_MIGRATION_GAP.md) - 与 ph-videos-text 的移植情况
 
 ## 与 ph-videos-text 的关系
 
