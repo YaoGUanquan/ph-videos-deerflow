@@ -2,11 +2,8 @@
 
 ## Supported Versions
 
-As deer-flow doesn't provide an offical release yet, please use the latest version for the security updates.
-Current we have two branches to maintain: 
-* main branch for deer-flow 2.x
-* main-1.x branch for deer-flow 1.x 
+ph-videos-deerflow 基于 DeerFlow 2.0，请使用最新版本以获取安全更新。
 
 ## Reporting a Vulnerability
 
-Please go to https://github.com/bytedance/deer-flow/security to report the vulnerability you find.
+如发现安全漏洞，请前往 [GitHub Security](https://github.com/YaoGUanquan/ph-videos-deerflow/security) 报告。
