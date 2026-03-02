@@ -8,6 +8,7 @@ const STORAGE_KEY = "ph_videos_config";
 export interface PhVideosConfig {
   volcano_api_key: string;
   dashscope_api_key: string;
+  openai_api_key: string;
   ph_videos_text_path: string;
   default_video_provider: string;
 }
@@ -15,6 +16,7 @@ export interface PhVideosConfig {
 const DEFAULT: PhVideosConfig = {
   volcano_api_key: "",
   dashscope_api_key: "",
+  openai_api_key: "",
   ph_videos_text_path: "",
   default_video_provider: "volcano",
 };

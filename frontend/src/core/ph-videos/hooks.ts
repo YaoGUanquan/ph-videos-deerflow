@@ -11,6 +11,7 @@ export function usePhVideosConfig() {
     typeof window !== "undefined" ? getPhVideosConfig() : {
       volcano_api_key: "",
       dashscope_api_key: "",
+      openai_api_key: "",
       ph_videos_text_path: "",
       default_video_provider: "volcano",
     },

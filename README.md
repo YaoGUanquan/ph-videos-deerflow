@@ -7,6 +7,7 @@
 - **双模式部署**：支持 Docker 云部署 + Electron exe 本地安装包
 - **统一代码库**：一套代码，两种交付方式
 - **基于 DeerFlow**：Skills、Sub-Agents、沙箱、长期记忆
+- **ph-videos API**：独立视频生成 API（`/api/ph-videos`），支持 TaskManager、BudgetController、质量评分重试
 
 ## 部署方式
 
@@ -56,6 +57,7 @@ make dev
 ph-videos-deerflow/
 ├── backend/           # DeerFlow Python 后端
 ├── frontend/          # DeerFlow Web UI
+├── backend/src/ph_videos/  # ph-videos 编排模块（TaskManager、BudgetController、VideoOrchestrator）
 ├── skills/public/     # Skills
 │   ├── ph-videos-script-generation/   # 主脚本生成（多稿+多评分员+迭代）
 │   ├── ph-videos-scorer-cinematography # 镜头语言评分员
@@ -72,6 +74,21 @@ ph-videos-deerflow/
 ├── config.docker.yaml # Docker 模式配置模板
 └── config.example.yaml # 通用配置模板
 ```
+
+## ph-videos API
+
+独立视频生成接口，与 DeerFlow Chat 双轨并存：
+
+| 接口 | 说明 |
+|------|------|
+| `POST /api/ph-videos/generate` | 创建任务（topic、api_keys、budget） |
+| `GET /api/ph-videos/tasks/{task_id}` | 查询任务状态 |
+| `GET /api/ph-videos/tasks/{task_id}/download` | 下载生成的视频 |
+| `GET /api/ph-videos/tasks` | 列出所有任务 |
+
+- API keys 仅通过请求传入，不持久化
+- 输出目录：`output/{task_id}/`（可通过 `PH_VIDEOS_OUTPUT_BASE` 配置）
+- 任务状态：pending → scripting → generating_scenes → generating_audio → rendering → completed/failed
 
 ## 配置切换
 

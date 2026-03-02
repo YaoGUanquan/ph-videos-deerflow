@@ -8,7 +8,7 @@ from src.reflection import resolve_class
 logger = logging.getLogger(__name__)
 
 
-def create_chat_model(name: str | None = None, thinking_enabled: bool = False, **kwargs) -> BaseChatModel:
+def create_chat_model(name: str | None = None, thinking_enabled: bool = False, api_key_override: str | None = None, **kwargs) -> BaseChatModel:
     """Create a chat model instance from the config.
 
     Args:
@@ -40,6 +40,8 @@ def create_chat_model(name: str | None = None, thinking_enabled: bool = False, *
         if not model_config.supports_thinking:
             raise ValueError(f"Model {name} does not support thinking. Set `supports_thinking` to true in the `config.yaml` to enable thinking.") from None
         model_settings_from_config.update(model_config.when_thinking_enabled)
+    if api_key_override is not None:
+        model_settings_from_config["api_key"] = api_key_override
     model_instance = model_class(**kwargs, **model_settings_from_config)
 
     if is_tracing_enabled():
